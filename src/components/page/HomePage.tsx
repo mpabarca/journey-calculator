@@ -71,7 +71,7 @@ function HomePage() {
     return isValid;
   };
 
-  function handleSubmit(_e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function handleSubmit(_e: React.FormEvent<HTMLFormElement>) {
     _e.preventDefault();
     if (validateAllFields())
       updateField(
@@ -83,7 +83,10 @@ function HomePage() {
   return (
     <div className='text-center'>
       <h1 className='text-4xl font-bold my-10'>Journey Expense Calculator</h1>
-      <div className='w-[600px] m-auto flex flex-col gap-8'>
+      <form
+        className='w-[600px] m-auto flex flex-col gap-8'
+        onSubmit={(e) => handleSubmit(e)}
+      >
         {/* Form */}
         <JourneyForm
           updateField={updateField}
@@ -97,13 +100,12 @@ function HomePage() {
         <Summary cost={journey.cost} distance={journey.totalDistance} />
         {/* Cheatsheet */}
         <button
-          type='button'
-          onClick={(e) => handleSubmit(e)}
+          type='submit'
           className='border rounded border-black bg-black text-white h-12 hover:bg-gray-700 hover:cursor-pointer'
         >
           Calculate Cost
         </button>
-      </div>
+      </form>
     </div>
   );
 }

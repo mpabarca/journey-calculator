@@ -14,7 +14,7 @@ function JourneyForm({ journey, updateField, validationErrors }: IJourneyForm) {
   const inputClass = 'w-full border rounded p-2';
 
   return (
-    <form className="flex gap-8">
+    <section className="flex gap-8">
       <div className={fieldClass}>
         <label htmlFor="start">Start Location</label>
         <input
@@ -81,7 +81,7 @@ function JourneyForm({ journey, updateField, validationErrors }: IJourneyForm) {
           <span className="h-12 w-full" />
         )}
       </div>
-    </form>
+    </section>
   );
 }
 

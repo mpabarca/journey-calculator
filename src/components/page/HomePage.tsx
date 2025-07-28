@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import JourneyForm from "../ui/JourneyForm";
 import Dropdown from "../ui/Dropdown";
 import Summary from "../ui/Summary";
-import { calculateCost } from "../../utils/calculator";
-import type { JourneyType, ValidationErrorsType } from "../../type";
+import { calculateCost, calculateTotalDistance } from "../../utils/calculator";
+import type { JourneyType, StopType, ValidationErrorsType } from "../../type";
 
 // Form -> 3 fields: 2 location string - 1 km number -> transport dropdown -> button calculate cost
 // Summary -> total cost number
@@ -16,6 +17,7 @@ const defaultJourney: JourneyType = {
   transport: "car",
   cost: 0,
   totalDistance: 0,
+  stops: [],
 };
 const defaultValidationErrors: ValidationErrorsType = {
   isError: false,
@@ -23,6 +25,12 @@ const defaultValidationErrors: ValidationErrorsType = {
     start: "",
     destination: "",
     intialDistance: "",
+    stops: [
+      {
+        name: "",
+        distance: "",
+      },
+    ],
   },
 };
 
@@ -31,37 +39,97 @@ function HomePage() {
   const [validationErrors, setValidationErrors] =
     useState<ValidationErrorsType>(defaultValidationErrors);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateField = (field: keyof JourneyType, value: any) => {
-    setJourney((prev) => ({ ...prev, [field]: value }));
-  };
+  function updateField(
+    field: keyof JourneyType,
+    value: string | number,
+    index?: number,
+    fieldStop?: keyof StopType
+  ) {
+    if (field === "stops" && index !== undefined && fieldStop)
+      updateStop(index, fieldStop, value);
+    else if (
+      field === "intialDistance" ||
+      field === "cost" ||
+      field === "totalDistance"
+    )
+      setJourney((prev) => ({ ...prev, [field]: Number(value) }));
+    else setJourney((prev) => ({ ...prev, [field]: value }));
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function addStop() {
+    setJourney((prev) => ({
+      ...prev,
+      stops: [...prev.stops, { name: "", distance: 0 }],
+    }));
+  }
+
+  function removeStop(index: number) {
+    setJourney((prev) => ({
+      ...prev,
+      stops: prev.stops.filter((_, i) => i !== index),
+    }));
+  }
+
+  function updateStop(index: number, fieldStop: keyof StopType, value: any) {
+    const updatedStops = [...journey.stops];
+    updatedStops[index] = {
+      ...updatedStops[index],
+      [fieldStop]: fieldStop === "distance" ? Number(value) : value,
+    };
+    setJourney((prev) => ({ ...prev, stops: updatedStops }));
+  }
+
   const validateAllFields = (): boolean => {
     const errors: ValidationErrorsType["errors"] = {
       start: "",
       destination: "",
       intialDistance: "",
+      stops: [],
     };
+
     let isValid = true;
 
+    // Validate start
     if (!journey.start.trim()) {
       errors.start = "This field is required.";
       isValid = false;
     }
+
+    // Validate destination
     if (!journey.destination.trim()) {
       errors.destination = "This field is required.";
       isValid = false;
     }
+
+    // Validate distinct start/destination
     if (journey.start === journey.destination) {
       errors.start = "Start must differ from Destination.";
       errors.destination = "Destination must differ from Start.";
       isValid = false;
     }
+
+    // Validate base distance
     if (isNaN(journey.intialDistance) || journey.intialDistance <= 0) {
       errors.intialDistance = "Distance must be a positive number.";
       isValid = false;
     }
+
+    // Validate stops[]
+    journey.stops.forEach((stop) => {
+      const stopError = { name: "", distance: "" };
+
+      if (!stop.name.trim()) {
+        stopError.name = "Stop name is required.";
+        isValid = false;
+      }
+
+      if (isNaN(stop.distance) || stop.distance <= 0) {
+        stopError.distance = "Distance must be a positive number.";
+        isValid = false;
+      }
+
+      errors.stops.push(stopError);
+    });
 
     setValidationErrors({
       isError: !isValid,
@@ -73,12 +141,11 @@ function HomePage() {
 
   function handleSubmit(_e: React.FormEvent<HTMLFormElement>) {
     _e.preventDefault();
-    if (validateAllFields())
-      updateField(
-        "cost",
-        calculateCost(journey.intialDistance, journey.transport)
-      );
-    updateField("totalDistance", journey.intialDistance);
+    if (validateAllFields()) {
+      const totalDistance = calculateTotalDistance(journey);
+      updateField("cost", calculateCost(totalDistance, journey.transport));
+      updateField("totalDistance", totalDistance);
+    }
   }
   return (
     <div className='text-center'>
@@ -92,8 +159,10 @@ function HomePage() {
           updateField={updateField}
           journey={journey}
           validationErrors={validationErrors}
+          addStop={addStop}
+          removeStop={removeStop}
+          updateStop={updateStop}
         />
-        {/* Add Stops */}
         {/* Select type of transport */}
         <Dropdown updateField={updateField} journey={journey} />
         {/* Result */}

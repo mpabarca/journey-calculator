@@ -1,87 +1,66 @@
-import type { JourneyType, ValidationErrorsType } from "../../type";
+import type { JourneyType, StopType, ValidationErrorsType } from "../../type";
+import InputForm from "./InputForm";
+import StopsSection from "./StopsSection";
 
 interface IJourneyForm {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateField: (field: keyof JourneyType, value: any) => void;
   journey: JourneyType;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // validateField: (field: keyof JourneyType, value: any) => boolean;
   validationErrors: ValidationErrorsType;
+  addStop: () => void;
+  removeStop: (index: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateStop: (index: number, field: keyof StopType, value: any) => void;
 }
 
-function JourneyForm({ journey, updateField, validationErrors }: IJourneyForm) {
-  const fieldClass = 'flex flex-col gap-2 w-56 items-start rounded';
-  const inputClass = 'w-full border rounded p-2';
-
+function JourneyForm({
+  journey,
+  updateField,
+  validationErrors,
+  addStop,
+  removeStop,
+}: IJourneyForm) {
   return (
-    <section className="flex gap-8">
-      <div className={fieldClass}>
-        <label htmlFor="start">Start Location</label>
-        <input
-          name="start"
-          placeholder="Madrid"
-          inputMode="text"
-          type="text"
-          className={inputClass}
+    <>
+      <section id='initial-journey' className='flex gap-8'>
+        <InputForm
+          name='start'
+          label='Start Location'
+          placeholder='Madrid'
+          type='text'
           value={journey.start}
-          onChange={(e) => {
-            const { value } = e.target;
-            updateField('start', value);
-          }}
+          updateField={updateField}
+          validation={validationErrors.errors.start}
         />
-        {validationErrors.errors.start ? (
-          <span className="text-red-500 text-sm h-12 w-full text-start">
-            {validationErrors.errors.start}
-          </span>
-        ) : (
-          <span className="h-12 w-full" />
-        )}
-      </div>
-      <div className={fieldClass}>
-        <label htmlFor="destination">Primary Destination</label>
-        <input
-          name="destination"
-          placeholder="Paris"
-          inputMode="text"
-          type="text"
-          className={inputClass}
+        <InputForm
+          name='destination'
+          label='Primary Destination'
+          placeholder='Paris'
+          type='text'
           value={journey.destination}
-          onChange={(e) => {
-            const { value } = e.target;
-            updateField('destination', value);
-          }}
+          updateField={updateField}
+          validation={validationErrors.errors.destination}
         />
-        {validationErrors.errors.destination ? (
-          <span className="text-red-500 text-sm  h-12 w-full text-start">
-            {validationErrors.errors.destination}
-          </span>
-        ) : (
-          <span className="h-12 w-full" />
-        )}
-      </div>
-      <div className={fieldClass}>
-        <label htmlFor="distance">Distance (km)</label>
-        <input
-          name="distance"
-          placeholder="1276"
-          type="number"
-          inputMode="numeric"
-          className={inputClass}
+
+        <InputForm
+          name='intialDistance'
+          label='Distance (km)'
+          placeholder='1276'
+          type='number'
           value={journey.intialDistance}
-          onChange={(e) => {
-            const { value } = e.target;
-            updateField('intialDistance', value);
-          }}
+          updateField={updateField}
+          validation={validationErrors.errors.intialDistance}
         />
-        {validationErrors.errors.intialDistance ? (
-          <span className="text-red-500 text-sm  h-12 w-full text-start">
-            {validationErrors.errors.intialDistance}
-          </span>
-        ) : (
-          <span className="h-12 w-full" />
-        )}
-      </div>
-    </section>
+      </section>
+      <StopsSection
+        stops={journey.stops}
+        addStop={addStop}
+        removeStop={removeStop}
+        updateField={updateField}
+        validationErrors={validationErrors.errors.stops}
+      />
+    </>
   );
 }
 
